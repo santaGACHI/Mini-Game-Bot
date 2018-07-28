@@ -6,8 +6,10 @@ public class Cards
 	private String symbol;
 	private String color;
 	
-	public Cards() {
-		number = 0;
+	public Cards(int number, String symbol, String color) {
+		this.number = number;
+		this.symbol = symbol;
+		this.color = color;
 	}
 
 	public int getNumber() {
