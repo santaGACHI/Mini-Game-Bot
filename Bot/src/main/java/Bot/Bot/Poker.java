@@ -17,6 +17,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Random;
 import java.util.Scanner;
 import java.awt.*;
 
@@ -31,11 +32,13 @@ public class Poker
 	private Cards cards[];
 	private MessageChannel channel[];
 	
+	Random rng;
 	private Timer timer = new Timer(1000, new TimerListener());
 	private int counter = 0;
 	
 	public Poker(JDA j)
 	{
+		rng = new Random();
 		cards = new Cards[52];
 		saveFile = new List();
 		jda = j;
@@ -48,39 +51,62 @@ public class Poker
 	{
 		loadPlayers();
 		loadCards();
+		play();
 		savePlayers();
+	}
+	
+	private void play()
+	{
+		House house = new House();
+		house.add(deal());
+		house.add(deal());
+		house.add(deal());
+		house.printCards();
+		
+	}
+	
+	private Cards deal()
+	{
+		int n = rng.nextInt(52);
+		Cards c = cards[n];
+		
+		while (c == null)
+		{
+			n = rng.nextInt(52);
+			c = cards[n];
+		}
+		cards[n] = null;
+
+		return c;
 	}
 	
 	private void loadCards()
 	{
-		int counter = 0;
+		int counter = 1;
 		String color = "";
 		String symbol = "";
-		
-		
+			
 		for (int i = 0; i < 52; i++)
 		{
-			if (i % 2 == 0) {
-				symbol = "spade";
-				color = "Red";
-			}	
-			if (i % 3 == 0) {
-				symbol = "heart";
-			}
 			if (i % 4 == 0) {
 				symbol = "diamond";
+				color = "Red";
 				counter++;
-			}			
-			if (i % 5 == 0) {
+			}	
+			else if (i % 4 == 1) {
 				symbol = "club";
+				color = "black";
+			}
+			else if (i % 4 == 2) {
+				symbol = "heart";
+				color = "Red";
+			}			
+			else if (i % 4 == 3) {
+				symbol = "spade";
+				color = "black";
 			}
 			cards[i] = new Cards(counter, symbol, color);
 			
-			System.out.println(cards[i].getNumber());
-			System.out.println(cards[i].getColor());
-			System.out.println(cards[i].getSymbol());
-			
-			color = "black";
 		}
 	}
 	
