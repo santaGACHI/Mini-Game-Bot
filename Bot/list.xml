@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<java version="1.8.0_65" class="java.beans.XMLDecoder">
+ <object class="Bot.Bot.List">
+  <void property="balance">
+   <array class="int" length="20">
+    <void index="0">
+     <int>100</int>
+    </void>
+    <void index="1">
+     <int>100</int>
+    </void>
+   </array>
+  </void>
+  <void property="id">
+   <array class="java.lang.String" length="20">
+    <void index="0">
+     <string>471432839519272980</string>
+    </void>
+    <void index="1">
+     <string>229345107013402624</string>
+    </void>
+   </array>
+  </void>
+ </object>
+</java>
