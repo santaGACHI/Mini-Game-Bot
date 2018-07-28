@@ -57,33 +57,28 @@ public class Poker
 		String color = "";
 		String symbol = "";
 		
-		System.out.println(cards[0].getNumber());
 		
 		for (int i = 0; i < 52; i++)
 		{
-			//System.out.println(i);
-			
-			if (i % 5 == 0) {
-				symbol = "club";
+			if (i % 2 == 0) {
+				symbol = "spade";
+				color = "Red";
+			}	
+			if (i % 3 == 0) {
+				symbol = "heart";
 			}
 			if (i % 4 == 0) {
 				symbol = "diamond";
 				counter++;
+			}			
+			if (i % 5 == 0) {
+				symbol = "club";
 			}
-			if (i % 3 == 0) {
-				symbol = "heart";
-			}
-			if (i % 2 == 0) {
-				symbol = "spade";
-				color = "Red";
-			}		
-			//cards[0].setNumber(counter);
-			//cards[i].setColor(color);
-			//cards[i].setSymbol(symbol);
+			cards[i] = new Cards(counter, symbol, color);
 			
-			//System.out.println(cards[i].getColor());
-			//System.out.println(cards[i].getSymbol());
-			//System.out.println(cards[i].getNumber());
+			System.out.println(cards[i].getNumber());
+			System.out.println(cards[i].getColor());
+			System.out.println(cards[i].getSymbol());
 			
 			color = "black";
 		}
