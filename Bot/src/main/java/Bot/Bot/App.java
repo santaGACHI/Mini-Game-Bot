@@ -27,7 +27,6 @@ import net.dv8tion.jda.core.events.message.priv.GenericPrivateMessageEvent;
 import net.dv8tion.jda.core.events.message.priv.PrivateMessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import net.dv8tion.jda.core.managers.AudioManager;
-import test.Ref;
 
 import java.util.*;
 import javax.swing.*;
@@ -48,6 +47,7 @@ public class App extends ListenerAdapter
 	RPS rps = new RPS();
 	Poker poker = new Poker(jda);
 	DM dm = new DM();
+	boolean pokerStarted = false;
 	
 	private AudioPlayerManager playerManager;
 	
@@ -125,12 +125,10 @@ public class App extends ListenerAdapter
     @Override
     public void onGuildMessageReceived(GuildMessageReceivedEvent event)
     {	
-    	
-
-    	
+ 	
     	if (event.getMessage().getContentRaw().startsWith("!poker"))
     	{
-    		if (poker.getCounter() < 6 && event.getMessage().getContentRaw().equalsIgnoreCase("!poker join"))
+    		if (!pokerStarted && poker.getCounter() < 6 && event.getMessage().getContentRaw().equalsIgnoreCase("!poker join"))
     		{
     			if (!poker.isInRoom(event.getAuthor()))
     			{
@@ -143,16 +141,39 @@ public class App extends ListenerAdapter
     				event.getChannel().sendMessage(event.getAuthor().getAsMention()+", you are already in the room!").queue();
     			}
     		}	
-    		else if (poker.getCounter() >= 6 && event.getMessage().getContentRaw().equalsIgnoreCase("!poker join"))
+    		else if (!pokerStarted && poker.getCounter() >= 6 && event.getMessage().getContentRaw().equalsIgnoreCase("!poker join"))
     		{
     			event.getChannel().sendMessage("There is no more room!").queue();
     		}   		
     		else if (poker.getCounter() > 6 || event.getMessage().getContentRaw().equalsIgnoreCase("!poker start"))
     		{
-    			event.getChannel().sendMessage("Poker game is starting!").queue();
-				poker.init();
+    			if (!pokerStarted)
+    			{
+        			poker.setChannel(event.getChannel());
+        			event.getChannel().sendMessage("Poker game is starting!").queue();
+        			pokerStarted = true;
+    				poker.init();
+    				poker.turn();
+    			}
+    			else
+    			{
+    				event.getChannel().sendMessage("Invalid Poker Command!").queue();
+    			}
     		}
-    		else if (event.getMessage().getContentRaw().equalsIgnoreCase("!poker leave"))
+    		else if (pokerStarted && event.getMessage().getContentRaw().equalsIgnoreCase("!poker raise"))
+    		{
+    			poker.turn(event.getAuthor(), event.getMessage().getContentRaw());
+    		}
+    		else if (pokerStarted && event.getMessage().getContentRaw().equalsIgnoreCase("!poker check"))
+    		{
+    			poker.turn(event.getAuthor(), event.getMessage().getContentRaw());
+    		}
+    		else if (pokerStarted && event.getMessage().getContentRaw().equalsIgnoreCase("!poker fold"))
+    		{
+    			poker.turn(event.getAuthor(), event.getMessage().getContentRaw());
+    		}
+    		
+    		else if (!pokerStarted && event.getMessage().getContentRaw().equalsIgnoreCase("!poker leave"))
     		{
     			if (!poker.isInRoom(event.getAuthor()))
     				event.getChannel().sendMessage(event.getAuthor().getAsMention()+"You are not in the room!").queue();

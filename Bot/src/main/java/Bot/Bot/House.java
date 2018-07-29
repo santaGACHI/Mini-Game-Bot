@@ -21,12 +21,18 @@ public class House
 		return cards[index];
 	}
 	
-	public void printCards()
+	public String printCards()
 	{
+		String str = "";
 		for (int i = 0; i < lastIndex; i++)
 		{
-			System.out.println(cards[i].getNumber());
-			System.out.println(cards[i].getSymbol());
+			str = str + cards[i].getNumber() + cards[i].getSymbol() + " \n";
 		}
+		return str;
+	}
+	
+	public boolean isFull()
+	{
+		return lastIndex == 5;
 	}
 }
