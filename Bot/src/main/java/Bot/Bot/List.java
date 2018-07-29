@@ -25,8 +25,17 @@ public class List
 		this.id = id;
 	}
 
-	public int[] getBalance() {
-		return balance;
+	public int getBalance(String str) 
+	{
+		int bal = 0;
+		for (int i = 0; i < id.length; i++)
+		{
+			if (str.equals(id[i]))
+			{
+				bal = balance[i];
+			}
+		}
+		return bal;
 	}
 
 	public void setBalance(int[] balance) {

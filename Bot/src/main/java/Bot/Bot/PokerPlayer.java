@@ -43,7 +43,8 @@ public class PokerPlayer
 	
 	public int subBalance(int b)
 	{
-		return balance -= b;
+		balance -= b;
+		return b;
 	}
 	
 	public boolean canBuyIn()

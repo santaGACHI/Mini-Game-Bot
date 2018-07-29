@@ -45,9 +45,9 @@ public class App extends ListenerAdapter
 	
 	Random rng = new Random();
 	RPS rps = new RPS();
-	Poker poker = new Poker(jda);
+	static Poker poker = new Poker(jda);
 	DM dm = new DM();
-	boolean pokerStarted = false;
+	static boolean pokerStarted = false;
 	
 	private AudioPlayerManager playerManager;
 	
@@ -125,27 +125,37 @@ public class App extends ListenerAdapter
     @Override
     public void onGuildMessageReceived(GuildMessageReceivedEvent event)
     {	
- 	
-    	if (event.getMessage().getContentRaw().startsWith("!poker"))
+    	String mess = event.getMessage().getContentRaw();
+    	MessageChannel ch = event.getChannel();
+    	User user = event.getAuthor();
+    	int num = 0;
+    	
+    	if (isInteger(mess))
     	{
-    		if (!pokerStarted && poker.getCounter() < 6 && event.getMessage().getContentRaw().equalsIgnoreCase("!poker join"))
+    		String str = mess.substring(13, mess.length());
+    		num = Integer.parseInt(str);
+    	}
+    	
+    	if (mess.startsWith("!poker"))
+    	{
+    		if (!pokerStarted && poker.getCounter() < 6 && mess.equalsIgnoreCase("!poker join"))
     		{
-    			if (!poker.isInRoom(event.getAuthor()))
+    			if (!poker.isInRoom(user))
     			{
-        			poker.setPlayer(event.getAuthor(), poker.getCounter());
-        			event.getChannel().sendMessage(poker.getPlayer(poker.getCounter()).getAsMention()+" has joined the game!").queue();
+        			poker.setPlayer(user, poker.getCounter());
+        			ch.sendMessage(poker.getPlayer(poker.getCounter()).getAsMention()+" has joined the game!").queue();
         			poker.addCounter();
     			}
     			else
     			{
-    				event.getChannel().sendMessage(event.getAuthor().getAsMention()+", you are already in the room!").queue();
+    				ch.sendMessage(user.getAsMention()+", you are already in the room!").queue();
     			}
     		}	
-    		else if (!pokerStarted && poker.getCounter() >= 6 && event.getMessage().getContentRaw().equalsIgnoreCase("!poker join"))
+    		else if (!pokerStarted && poker.getCounter() >= 6 && mess.equalsIgnoreCase("!poker join"))
     		{
-    			event.getChannel().sendMessage("There is no more room!").queue();
+    			ch.sendMessage("There is no more room!").queue();
     		}   		
-    		else if (poker.getCounter() > 6 || event.getMessage().getContentRaw().equalsIgnoreCase("!poker start"))
+    		else if (poker.getCounter() > 6 || mess.equalsIgnoreCase("!poker start"))
     		{
     			if (!pokerStarted)
     			{
@@ -153,30 +163,35 @@ public class App extends ListenerAdapter
         			event.getChannel().sendMessage("Poker game is starting!").queue();
         			pokerStarted = true;
     				poker.init();
-    				poker.turn();
     			}
     			else
     			{
-    				event.getChannel().sendMessage("Invalid Poker Command!").queue();
+    				ch.sendMessage("Invalid Poker Command!").queue();
     			}
     		}
-    		else if (pokerStarted && event.getMessage().getContentRaw().equalsIgnoreCase("!poker raise"))
+    		else if (pokerStarted && mess.equalsIgnoreCase("!poker raise "+num))
     		{
-    			poker.turn(event.getAuthor(), event.getMessage().getContentRaw());
+    			poker.turn(user, mess, num);
+    			if (poker.gameDone())
+    				pokerReset();
     		}
-    		else if (pokerStarted && event.getMessage().getContentRaw().equalsIgnoreCase("!poker check"))
+    		else if (pokerStarted && mess.equalsIgnoreCase("!poker check"))
     		{
-    			poker.turn(event.getAuthor(), event.getMessage().getContentRaw());
+    			poker.turn(user, mess);
+    			if (poker.gameDone())
+    				pokerReset();
     		}
-    		else if (pokerStarted && event.getMessage().getContentRaw().equalsIgnoreCase("!poker fold"))
+    		else if (pokerStarted && mess.equalsIgnoreCase("!poker fold"))
     		{
-    			poker.turn(event.getAuthor(), event.getMessage().getContentRaw());
+    			poker.turn(user, mess);
+    			if (poker.gameDone())
+    				pokerReset();
     		}
     		
-    		else if (!pokerStarted && event.getMessage().getContentRaw().equalsIgnoreCase("!poker leave"))
+    		else if (!pokerStarted && mess.equalsIgnoreCase("!poker leave"))
     		{
-    			if (!poker.isInRoom(event.getAuthor()))
-    				event.getChannel().sendMessage(event.getAuthor().getAsMention()+"You are not in the room!").queue();
+    			if (!poker.isInRoom(user))
+    				ch.sendMessage(user.getAsMention()+"You are not in the room!").queue();
     			else
     			{
     				poker.subCounter();
@@ -185,22 +200,41 @@ public class App extends ListenerAdapter
     			}
     			return;
     		}
-    		else if (event.getMessage().getContentRaw().equalsIgnoreCase("!poker collect"))
+    		else if (mess.equalsIgnoreCase("!poker collect"))
     		{
     			
     		}
     		else
     		{
-    			event.getChannel().sendMessage("Invalid Poker Command!").queue();
+    			ch.sendMessage("Invalid Poker Command!").queue();
     		}  		  		
     	}
     	else
     		return;
     	
     }
+    
+    public static void pokerReset()
+    {
+    	poker = new Poker(jda);
+    	pokerStarted = false;
+    }
 
-
-
+    public static boolean isInteger(String str) 
+    {
+    	char c = ' ';
+    	if (str.length() > 12)
+    	{
+    		for (int i = 13; i < str.length(); i++)
+    		{
+    			c = str.charAt(i);
+    			if (c < '0' || c > '9')
+    				return false;
+    		}
+    		return true;
+    	}
+    		return false;
+    }
     	
     
     /*@Override

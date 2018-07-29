@@ -41,6 +41,9 @@ public class Poker
     private Timer timer = new Timer(1000, new TimerListener());
     private int counter = 0;
     private int playerCounter = 0;
+    private boolean wasRaised = false;
+    private int currentRaise = 0;
+    private boolean gameFinished;
     
     public Poker(JDA j)
     {
@@ -52,6 +55,7 @@ public class Poker
         jda = j;
         player = new PokerPlayer[6];
         user = new User[6];
+        gameFinished = false;
     }
     
     public void init()
@@ -81,33 +85,51 @@ public class Poker
         	}
         	else
         	{
-        		player[i].setStatus(false);;
+        		player[i].setStatus(false);
         	}
-        }      
-
-    }
-    
-    public void turn()
-    {
+        }
     	channel.sendMessage(player[playerCounter].getName()+"'s turn!").queue();
     	channel.sendMessage("Current Pot: "+pot.getBalance()).queue();
     }
-    public void turn(User u, String str) 
+    
+    public void turn(User u, String str)
     {
-    	
+    	turn(u, str, 0);
+    }
+    public void turn(User u, String str, int num) 
+    {	
     	if (player[playerCounter].getID().equals(u.getId()))
     	{
-    		if (str.equalsIgnoreCase("!poker raise"))
+    		if (str.equalsIgnoreCase("!poker raise "+num))
+    		{
+    			if (player[playerCounter].getBalance() > 0)
+    			{
+        			pot.add(player[playerCounter].subBalance(num));
+        			currentRaise = num;
+        			wasRaised = true;	
+    			}
+    			else
+    			{
+    				channel.sendMessage("You have insufficient funds to raise!").queue();
+    				return;
+    			}
+    		}
+    		if (str.equalsIgnoreCase("!poker check") && !wasRaised)
     		{
     			
     		}
-    		if (str.equalsIgnoreCase("!poker check"))
+    		if (str.equalsIgnoreCase("!poker call") && wasRaised)
     		{
-    			
-    		}
-    		if (str.equalsIgnoreCase("!poker call"))
-    		{
-    			
+    			if (player[playerCounter].getBalance() >= currentRaise)
+    			{
+    				pot.add(player[playerCounter].subBalance(currentRaise));
+    			}
+    			else
+    			{
+    				channel.sendMessage("You have insufficient funds to call! All in!").queue();
+    				allIn();
+    				return;
+    			}
     		}
     		if (str.equalsIgnoreCase("!poker fold"))
     		{
@@ -121,30 +143,57 @@ public class Poker
     		if (player[playerCounter] == null)
     		{
     			playerCounter = 0;
-    			if (house.isFull())
+    			if (house.isFull() && !str.equalsIgnoreCase("!poker fold"))
     			{
     				showCards();
     				return;
+    			}  			
+    			else if (str.equalsIgnoreCase("!poker fold"))
+    			{			
+    				boolean flag = false;
+    				for (int i = 0; i < playerCounter; i++)
+    				{
+    					if(player[i].getStatus())
+    						flag = true; 
+    				}
+    				if (!flag)
+    				{
+    					gameFinished = true;
+    					channel.sendMessage("Everyone folded!").queue();
+    					return;
+    				}	
     			}
     			else
-    			{
+    			{			
         			house.add(deal());
         			channel.sendMessage(house.printCards()).queue();	
     			}
     		}
-    		turn();
+    		if (player[playerCounter].getStatus())
+    		{
+            	channel.sendMessage(player[playerCounter].getName()+"'s turn!").queue();
+            	channel.sendMessage("Current Pot: "+pot.getBalance()).queue();  			
+    		}
     	}
+    }
     
-    	
-
+    public boolean gameDone()
+    {
+    	return gameFinished;
+    }
+    
+    private void allIn()
+    {
+    	pot.add(player[playerCounter].subBalance(player[playerCounter].getBalance()));
     }
     private void showCards()
     {
-    	
+    	gameFinished = true;
+    	channel.sendMessage(jda.getUserById(player[0].getID()).getName() + jda.getUserById(player[0].getID()).getDiscriminator()+" won "+pot.getBalance()).queue();
     }
     private void shuffleDeck()
     {
-        for(int i = 0; i < 52; i ++)
+        for(int i = 0; i < 52; i++)
             deck.add(i,i);
         Collections.shuffle(deck);
     }
@@ -180,8 +229,7 @@ public class Poker
                 symbol = "spade";
                 color = "black";
             }
-            cards[i] = new Cards(counter, symbol, color);
-            
+            cards[i] = new Cards(counter, symbol, color);          
         }
     }
     
@@ -201,7 +249,6 @@ public class Poker
 
     private void loadPlayers()
     {
-
         try {
             File file = new File("./list.xml");
             if (!file.exists())
@@ -227,6 +274,7 @@ public class Poker
             player[i] = new PokerPlayer(user[i]);
             dm.setUser(user[i], i);
             saveFile.add(player[i].getID());
+            player[i].setBalance(saveFile.getBalance(player[i].getID()));
         }
         //System.out.println(jda.getUserById(id).getName() + jda.getUserById(id).getDiscriminator());   
     }
